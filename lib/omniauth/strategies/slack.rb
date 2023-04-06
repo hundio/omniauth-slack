@@ -40,12 +40,13 @@ module OmniAuth
       
       # OAuth2::Client options.
       option :client_options, {
-        site: 'https://slack.com',
-        authorize_url: '/oauth/v2/authorize',
-        token_url: '/api/oauth.v2.access',
+        access_token_class: OmniAuth::Slack::OAuth2::AccessToken,
         auth_scheme: :basic_auth,
-        raise_errors: false, # MUST be false to allow Slack's get-token response from v2 API.
+        authorize_url: '/oauth/v2/authorize',
         history: Array.new,
+        raise_errors: false, # MUST be false to allow Slack's get-token response from v2 API.
+        site: 'https://slack.com',
+        token_url: '/api/oauth.v2.access',
       }
       
       # Authorization token-exchange API call options.
@@ -184,7 +185,7 @@ module OmniAuth
       def client
         @client ||= (
           team_domain = (pass_through_params.include?('team_domain') && request.params['team_domain']) ? request.params['team_domain'] : options.team_domain
-          new_client = OmniAuth::Slack::OAuth2::Client.new(options.client_id, options.client_secret, deep_symbolize(options.client_options.merge({subdomain:team_domain})))
+          new_client = OmniAuth::Slack::OAuth2::Client.new(options.client_id, options.client_secret, **deep_symbolize(options.client_options.merge({subdomain:team_domain})))
   
           debug{"Strategy #{self} using Client #{new_client} with callback_url #{callback_url}"}
           
@@ -196,7 +197,7 @@ module OmniAuth
       # some errors in call to /api/oauth.[v2.]access.
       #
       def callback_url
-        options.redirect_uri || full_host + script_name + callback_path
+        options.redirect_uri || full_host + callback_path
       end
       
       ### Possibly obsolete
